@@ -1,9 +1,25 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8081/api';
+const ORDER_API_URL = 'http://localhost:8081/api';
+const AUTH_API_URL = 'http://localhost:8082/api';
+const CATALOG_API_URL = 'http://localhost:8083/api';
 
-const api = axios.create({
-  baseURL: API_URL,
+const orderApi = axios.create({
+  baseURL: ORDER_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const authApi = axios.create({
+  baseURL: AUTH_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+const catalogApi = axios.create({
+  baseURL: CATALOG_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,67 +28,67 @@ const api = axios.create({
 // ==================== USERS ====================
 export const userService = {
   register: (username, email, password, fullName) =>
-    api.post('/users/register', { username, email, password, fullName }),
+    authApi.post('/users/register', { username, email, password, fullName }),
   
   login: (username, password) =>
-    api.post('/users/login', { username, password }),
+    authApi.post('/users/login', { username, password }),
   
   getAllUsers: () =>
-    api.get('/users'),
+    authApi.get('/users'),
   
   getUserById: (id) =>
-    api.get(`/users/${id}`),
+    authApi.get(`/users/${id}`),
 };
 
 // ==================== PRODUCTS ====================
 export const productService = {
   createProduct: (name, description, price, stock, category) =>
-    api.post('/products', { name, description, price, stock, category }),
+    catalogApi.post('/products', { name, description, price, stock, category }),
   
   getAllProducts: () =>
-    api.get('/products'),
+    catalogApi.get('/products'),
   
   getProductById: (id) =>
-    api.get(`/products/${id}`),
+    catalogApi.get(`/products/${id}`),
   
   getByCategory: (category) =>
-    api.get(`/products/category/${category}`),
+    catalogApi.get(`/products/category/${category}`),
   
   updateStock: (id, stock) =>
-    api.put(`/products/${id}/stock?stock=${stock}`),
+    catalogApi.put(`/products/${id}/stock?stock=${stock}`),
   
   updatePrice: (id, price) =>
-    api.put(`/products/${id}/price?price=${price}`),
+    catalogApi.put(`/products/${id}/price?price=${price}`),
 };
 
 // ==================== CART ====================
 export const cartService = {
   addToCart: (userId, productId, quantity) =>
-    api.post('/cart/add', { userId, productId, quantity }),
+    orderApi.post('/cart/add', { userId, productId, quantity }),
   
   getCart: (userId) =>
-    api.get(`/cart/${userId}`),
+    orderApi.get(`/cart/${userId}`),
   
   removeFromCart: (userId, productId) =>
-    api.delete(`/cart/${userId}/item/${productId}`),
+    orderApi.delete(`/cart/${userId}/item/${productId}`),
   
   clearCart: (userId) =>
-    api.delete(`/cart/${userId}`),
+    orderApi.delete(`/cart/${userId}`),
 };
 
 // ==================== ORDERS ====================
 export const orderService = {
   createOrder: (userId) =>
-    api.post('/orders', { userId }),
+    orderApi.post('/orders', { userId }),
   
   getOrderById: (id) =>
-    api.get(`/orders/${id}`),
+    orderApi.get(`/orders/${id}`),
   
   getUserOrders: (userId) =>
-    api.get(`/orders/user/${userId}`),
+    orderApi.get(`/orders/user/${userId}`),
   
   getAllOrders: () =>
-    api.get('/orders'),
+    orderApi.get('/orders'),
 };
 
-export default api;
+export default orderApi;
