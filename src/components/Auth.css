@@ -38,8 +38,14 @@
 .auth-card h2 {
   text-align: center;
   color: #333;
-  margin-bottom: 30px;
+  margin-bottom: 8px;
   font-size: 20px;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 24px;
 }
 
 .auth-card form {
@@ -105,6 +111,28 @@
   border-radius: 5px;
   margin-bottom: 15px;
   font-size: 14px;
+}
+
+.google-login-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.google-button-host {
+  min-height: 44px;
+}
+
+.google-button-host.is-loading {
+  width: 320px;
+  border-radius: 5px;
+  background: #f4f4f4;
+}
+
+.auth-loading {
+  color: #666;
+  font-size: 13px;
 }
 
 .message.error {
