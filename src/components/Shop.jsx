@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { productService, cartService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Shop.css';
 
-const Shop = ({ user, onLogout }) => {
+const Shop = () => {
+  const { user, logout } = useAuth();
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,9 +20,17 @@ const Shop = ({ user, onLogout }) => {
   });
 
   useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
+
     loadProducts();
     loadCart();
-  }, []);
+  }, [user?.id]);
+
+  if (!user) {
+    return null;
+  }
 
   const loadProducts = async () => {
     try {
@@ -28,6 +38,7 @@ const Shop = ({ user, onLogout }) => {
       const response = await productService.getAllProducts();
       setProducts(response.data.data || []);
     } catch (err) {
+      console.error(err);
       setError('Error al cargar productos');
     } finally {
       setLoading(false);
@@ -39,7 +50,8 @@ const Shop = ({ user, onLogout }) => {
       const response = await cartService.getCart(user.id);
       setCart(response.data.data || []);
     } catch (err) {
-      console.log('Carrito vacío');
+      console.error(err);
+      setCart([]);
     }
   };
 
@@ -58,6 +70,7 @@ const Shop = ({ user, onLogout }) => {
       await cartService.removeFromCart(user.id, productId);
       loadCart();
     } catch (err) {
+      console.error(err);
       setError('Error al eliminar del carrito');
     }
   };
@@ -68,8 +81,8 @@ const Shop = ({ user, onLogout }) => {
       await productService.createProduct(
         newProduct.name,
         newProduct.description,
-        parseFloat(newProduct.price),
-        parseInt(newProduct.stock),
+        Number.parseFloat(newProduct.price),
+        Number.parseInt(newProduct.stock, 10),
         newProduct.category
       );
       loadProducts();
@@ -77,6 +90,7 @@ const Shop = ({ user, onLogout }) => {
       setShowAddProduct(false);
       setError('');
     } catch (err) {
+      console.error(err);
       setError('Error al crear producto');
     }
   };
@@ -100,7 +114,7 @@ const Shop = ({ user, onLogout }) => {
             >
               🛒 Carrito ({cartCount})
             </button>
-            <button className="btn-logout" onClick={onLogout}>
+            <button className="btn-logout" onClick={logout}>
               Salir
             </button>
           </div>

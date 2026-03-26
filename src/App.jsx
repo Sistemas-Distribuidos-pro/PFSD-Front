@@ -1,35 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Auth from './components/Auth';
 import Shop from './components/Shop';
+import { useAuth } from './context/AuthContext';
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { isAuthLoading, isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (err) {
-        localStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-  };
-
-  if (loading) {
+  if (isAuthLoading) {
     return (
       <div className="loading-container">
         <div className="loader"></div>
@@ -40,11 +18,7 @@ function App() {
 
   return (
     <div className="App">
-      {!user ? (
-        <Auth onLoginSuccess={handleLoginSuccess} />
-      ) : (
-        <Shop user={user} onLogout={handleLogout} />
-      )}
+      {isAuthenticated ? <Shop /> : <Auth />}
     </div>
   );
 }
