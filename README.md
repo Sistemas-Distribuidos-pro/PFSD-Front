@@ -238,3 +238,4 @@ ISC
 **Versión:** 1.0.0  
 **Última actualización:** 27 de Febrero 2026  
 **Autor del Proyecto:** Académico
+# Front-Cloud
