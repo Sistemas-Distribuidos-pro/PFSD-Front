@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
-const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const GSI_INIT_CLIENT_KEY = '__front_seof_gsi_initialized_client_id__';
 const GSI_CALLBACK_KEY = '__front_seof_gsi_active_callback__';
 
@@ -29,7 +29,7 @@ const Auth = () => {
       } catch (err) {
         setError(
           err.response?.data?.message ||
-            'No se pudo iniciar sesión. Intenta nuevamente en unos segundos.',
+          'No se pudo iniciar sesión. Intenta nuevamente en unos segundos.',
         );
       } finally {
         setLoading(false);
@@ -42,7 +42,7 @@ const Auth = () => {
     globalThis[GSI_CALLBACK_KEY] = handleCredentialResponse;
 
     if (!GOOGLE_CLIENT_ID) {
-      setError('Falta la variable GOOGLE_CLIENT_ID en el entorno del frontend.');
+      setError('Falta la variable VITE_GOOGLE_CLIENT_ID en el entorno del frontend.');
       return;
     }
 
@@ -120,7 +120,7 @@ const Auth = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>🛍️ E-Commerce Monolito</h1>
+        <h1>🛍️ E-Commerce Frontend</h1>
         <h2>Iniciar Sesión</h2>
         <p className="auth-subtitle">Usa tu cuenta de Google para continuar</p>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productService, cartService } from '../services/api';
+import { productService, cartService, orderService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './Shop.css';
 
@@ -9,6 +9,9 @@ const Shop = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutStatus, setCheckoutStatus] = useState('');
+  const [checkoutMessage, setCheckoutMessage] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -60,6 +63,8 @@ const Shop = () => {
       await cartService.addToCart(user.id, productId, 1);
       loadCart();
       setError('');
+      setCheckoutStatus('');
+      setCheckoutMessage('');
     } catch (err) {
       setError(err.response?.data?.message || 'Error al agregar al carrito');
     }
@@ -95,6 +100,31 @@ const Shop = () => {
     }
   };
 
+  const handleCheckout = async () => {
+    if (!cart.items || cart.items.length === 0 || checkoutLoading) {
+      return;
+    }
+
+    try {
+      setCheckoutLoading(true);
+      setCheckoutStatus('');
+      setCheckoutMessage('');
+      setError('');
+
+      await orderService.createOrder();
+      await loadCart();
+
+      setCheckoutStatus('success');
+      setCheckoutMessage('Compra realizada correctamente.');
+    } catch (err) {
+      console.error(err);
+      setCheckoutStatus('error');
+      setCheckoutMessage(err.response?.data?.message || 'No se pudo completar el checkout.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   const cartTotal = cart.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
   const cartCount = cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
@@ -103,7 +133,7 @@ const Shop = () => {
       {/* Header */}
       <header className="shop-header">
         <div className="header-content">
-          <h1>🛍️ E-Commerce Monolito</h1>
+          <h1>🛍️ E-Commerce Frontend</h1>
           <div className="header-actions">
             <div className="user-info">
               <span>👤 {user.fullName || user.username}</span>
@@ -224,6 +254,11 @@ const Shop = () => {
           /* Cart View */
           <div className="cart-view">
             <h2>🛒 Mi Carrito</h2>
+            {checkoutMessage && (
+              <div className={`checkout-message ${checkoutStatus}`}>
+                {checkoutMessage}
+              </div>
+            )}
             {!cart.items || cart.items.length === 0 ? (
               <p className="empty-cart">Tu carrito está vacío</p>
             ) : (
@@ -247,7 +282,13 @@ const Shop = () => {
                 </div>
                 <div className="cart-summary">
                   <h3>Total: ${cartTotal.toFixed(2)}</h3>
-                  <button className="btn-checkout">💳 Proceder al Pago</button>
+                  <button
+                    className="btn-checkout"
+                    onClick={handleCheckout}
+                    disabled={checkoutLoading}
+                  >
+                    {checkoutLoading ? 'Procesando...' : '💳 Proceder al Pago'}
+                  </button>
                 </div>
               </>
             )}

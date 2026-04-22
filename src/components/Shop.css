@@ -81,6 +81,25 @@
   border-left: 4px solid #c00;
 }
 
+.checkout-message {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.checkout-message.success {
+  background: #e8fff1;
+  color: #0a6b36;
+  border-left: 4px solid #1aa35b;
+}
+
+.checkout-message.error {
+  background: #ffe0e0;
+  color: #c00;
+  border-left: 4px solid #c00;
+}
+
 .shop-content {
   flex: 1;
   max-width: 1200px;
@@ -373,6 +392,13 @@
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
+.btn-checkout:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .loading,
 .no-products {
   text-align: center;
@@ -403,5 +429,9 @@
   .cart-summary {
     flex-direction: column;
     text-align: center;
+  }
+
+  .checkout-message {
+    margin-top: 12px;
   }
 }

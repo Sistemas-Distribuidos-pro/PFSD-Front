@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { emitSessionExpired, sessionStorageService } from './session';
 
-const ORDER_API_URL = import.meta.env.ORDER_API_URL;
-const AUTH_API_URL = import.meta.env.AUTH_API_URL;
-const CATALOG_API_URL = import.meta.env.CATALOG_API_URL;
+const ORDER_SERVICE_URL = import.meta.env.VITE_ORDER_SERVICE_URL;
+const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
+const CATALOG_SERVICE_URL = import.meta.env.VITE_CATALOG_SERVICE_URL;
 
 const defaultConfig = {
   headers: {
@@ -12,17 +12,17 @@ const defaultConfig = {
 };
 
 const authApi = axios.create({
-  baseURL: AUTH_API_URL,
+  baseURL: AUTH_SERVICE_URL,
   ...defaultConfig,
 });
 
 const catalogApi = axios.create({
-  baseURL: CATALOG_API_URL,
+  baseURL: CATALOG_SERVICE_URL,
   ...defaultConfig,
 });
 
 const orderApi = axios.create({
-  baseURL: ORDER_API_URL,
+  baseURL: ORDER_SERVICE_URL,
   ...defaultConfig,
 });
 
@@ -46,7 +46,7 @@ const attachInterceptors = (instance) => {
       }
 
       return Promise.reject(error);
-    }
+    },
   );
 };
 
