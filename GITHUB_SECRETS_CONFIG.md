@@ -7,7 +7,9 @@ Basado en `terraform output` del ambiente **local**:
 ```
 S3 Bucket: local-ecommerce-frontend-414813662494
 Frontend URL: http://local-ecommerce-frontend-414813662494.s3-website-us-east-1.amazonaws.com
-Backend API URL: http://3.226.76.177:8081
+Order service URL: http://3.226.76.177:8081
+Auth service URL: http://3.226.76.177:8082
+Catalog service URL: http://3.226.76.177:8083
 AWS Region: us-east-1
 ```
 
@@ -37,13 +39,25 @@ gh secret set S3_BUCKET_NAME --body "local-ecommerce-frontend-414813662494"
 
 ## Variables Requeridas
 
-### 4. VITE_API_URL
+### 4. VITE_ORDER_SERVICE_URL
 ```bash
-gh variable set VITE_API_URL --body "http://3.226.76.177:8081"
+gh variable set VITE_ORDER_SERVICE_URL --body "http://3.226.76.177:8081"
 ```
-**Valor:** `http://3.226.76.177:8081` (URL del backend)
+**Valor:** `http://3.226.76.177:8081` (order-service)
 
-**Importante:** Esta variable se usa en build time para que el frontend sepa dónde está el backend.
+**Importante:** Esta variable se usa en build time para que el frontend sepa dónde está el order-service.
+
+### 5. VITE_AUTH_SERVICE_URL
+```bash
+gh variable set VITE_AUTH_SERVICE_URL --body "http://3.226.76.177:8082"
+```
+**Valor:** `http://3.226.76.177:8082` (auth-service)
+
+### 6. VITE_CATALOG_SERVICE_URL
+```bash
+gh variable set VITE_CATALOG_SERVICE_URL --body "http://3.226.76.177:8083"
+```
+**Valor:** `http://3.226.76.177:8083` (catalog-service)
 
 ---
 
@@ -79,7 +93,9 @@ Si prefieres usar la UI de GitHub:
 
 4. En la pestaña **Variables**:
    - Click **New repository variable**
-   - Nombre: `VITE_API_URL`, Valor: `http://3.226.76.177:8081`
+   - Nombre: `VITE_ORDER_SERVICE_URL`, Valor: `http://3.226.76.177:8081`
+   - Nombre: `VITE_AUTH_SERVICE_URL`, Valor: `http://3.226.76.177:8082`
+   - Nombre: `VITE_CATALOG_SERVICE_URL`, Valor: `http://3.226.76.177:8083`
    - Click **New repository variable** (opcional)
    - Nombre: `AWS_REGION`, Valor: `us-east-1`
    - Click **New repository variable** (opcional)
@@ -108,9 +124,9 @@ start http://local-ecommerce-frontend-414813662494.s3-website-us-east-1.amazonaw
 
 ---
 
-## Importante: CORS en Backend
+## Importante: CORS en Servicios
 
-Para que el frontend pueda comunicarse con el backend, asegúrate de que el backend tenga CORS configurado correctamente en:
+Para que el frontend pueda comunicarse con los servicios, asegúrate de que tengan CORS configurado correctamente en:
 
 ```java
 // src/main/java/com/monolito/ecommerce/config/CorsConfig.java
@@ -129,17 +145,17 @@ allowedOrigins = "*"
 ### Error: "Falta secret S3_BUCKET_NAME"
 **Solución:** Configura el secret S3_BUCKET_NAME con `local-ecommerce-frontend-414813662494`
 
-### Error: "Falta VITE_API_URL"
-**Solución:** Configura la variable VITE_API_URL con `http://3.226.76.177:8081`
+### Error: "Falta VITE_ORDER_SERVICE_URL"
+**Solución:** Configura la variable VITE_ORDER_SERVICE_URL con `http://3.226.76.177:8081`
 
 ### Error: "Access Denied" en S3
 **Solución:** Verifica que AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY tengan permisos `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` y `s3:ListBucket` en el bucket
 
-### Frontend no se conecta al backend
+### Frontend no se conecta a los servicios
 **Solución:** 
-1. Verifica que VITE_API_URL apunte al backend correcto
-2. Verifica CORS en el backend
-3. Verifica que el backend esté corriendo: `curl http://3.226.76.177:8081/api/users`
+1. Verifica que las tres variables VITE_* apunten a los servicios correctos
+2. Verifica CORS en los servicios
+3. Verifica que los servicios estén corriendo: `curl http://3.226.76.177:8081`, `curl http://3.226.76.177:8082`, `curl http://3.226.76.177:8083`
 
 ---
 
@@ -149,7 +165,9 @@ El frontend usa variables de entorno con el prefijo `VITE_`. Durante el build, e
 
 ```javascript
 // En tu código frontend puedes usar:
-const API_URL = import.meta.env.VITE_API_URL;
+const ORDER_URL = import.meta.env.VITE_ORDER_SERVICE_URL;
+const AUTH_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
+const CATALOG_URL = import.meta.env.VITE_CATALOG_SERVICE_URL;
 ```
 
 ---

@@ -9,7 +9,9 @@ on:
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-  VITE_API_URL: ${{ vars.VITE_API_URL || secrets.VITE_API_URL }}
+  VITE_ORDER_SERVICE_URL: ${{ vars.VITE_ORDER_SERVICE_URL || secrets.VITE_ORDER_SERVICE_URL }}
+  VITE_AUTH_SERVICE_URL: ${{ vars.VITE_AUTH_SERVICE_URL || secrets.VITE_AUTH_SERVICE_URL }}
+  VITE_CATALOG_SERVICE_URL: ${{ vars.VITE_CATALOG_SERVICE_URL || secrets.VITE_CATALOG_SERVICE_URL }}
 
 jobs:
   deploy-frontend:
@@ -36,15 +38,25 @@ jobs:
             echo "Falta secret S3_BUCKET_NAME"
             exit 1
           fi
-          if [ -z "${{ env.VITE_API_URL }}" ]; then
-            echo "Falta VITE_API_URL en vars o secrets"
+          if [ -z "${{ env.VITE_ORDER_SERVICE_URL }}" ]; then
+            echo "Falta VITE_ORDER_SERVICE_URL en vars o secrets"
+            exit 1
+          fi
+          if [ -z "${{ env.VITE_AUTH_SERVICE_URL }}" ]; then
+            echo "Falta VITE_AUTH_SERVICE_URL en vars o secrets"
+            exit 1
+          fi
+          if [ -z "${{ env.VITE_CATALOG_SERVICE_URL }}" ]; then
+            echo "Falta VITE_CATALOG_SERVICE_URL en vars o secrets"
             exit 1
           fi
 
       - name: Build frontend
         run: npm run build
         env:
-          VITE_API_URL: ${{ env.VITE_API_URL }}
+          VITE_ORDER_SERVICE_URL: ${{ env.VITE_ORDER_SERVICE_URL }}
+          VITE_AUTH_SERVICE_URL: ${{ env.VITE_AUTH_SERVICE_URL }}
+          VITE_CATALOG_SERVICE_URL: ${{ env.VITE_CATALOG_SERVICE_URL }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

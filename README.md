@@ -1,33 +1,38 @@
-# 🛍️ E-Commerce Monolito - Frontend
+# 🛍️ E-Commerce Frontend
 
-Frontend moderno construido con **React** y **Vite** que consume los APIs REST del backend monolítico.
+Frontend moderno construido con **React** y **Vite** que consume tres servicios REST separados: `order-service`, `auth-service` y `catalog-service`.
 
 ## 📋 Características
 
 ✅ **Autenticación de Usuarios**
+
 - Registro e inicio de sesión
 - Persistencia de sesión con localStorage
 - Validación en frontend
 
 ✅ **Catálogo de Productos**
+
 - Listado de productos con búsqueda
 - Filtrado por categoría
 - Agregar/crear productos
 - Información de stock en tiempo real
 
 ✅ **Carrito de Compras**
+
 - Agregar/eliminar productos
 - Cálculo automático de total
 - Vista del carrito
 
-✅ **Órdenes (En desarrollo)**
-- Procesar pedidos
-- Historial de compras
-- Confirmación de transacciones
+✅ **Órdenes**
+
+- Checkout síncrono contra `order-service`
+- Limpieza del carrito después de la compra
+- Confirmación visible de la orden
 
 ## 🚀 Instalación y Uso
 
 ### Requisitos
+
 - Node.js 16+
 - npm o yarn
 
@@ -75,35 +80,37 @@ FRONT-DEMO/
 └── README.md                  # Este archivo
 ```
 
-## 🔌 Conexión con Backend
+## 🔌 Conexión con Servicios
 
-El frontend se conecta al backend en `http://localhost:8081` mediante:
+El frontend se conecta a tres servicios REST que deben estar corriendo localmente o en la nube:
 
-**Variables de Configuración:** [src/services/api.js](src/services/api.js#L3)
+- `order-service` en `http://localhost:8081`
+- `auth-service` en `http://localhost:8082`
+- `catalog-service` en `http://localhost:8083`
 
-```javascript
-const API_URL = 'http://localhost:8081/api';
+Las URLs se definen con variables de entorno Vite y se consumen desde [src/services/httpClient.js](src/services/httpClient.js#L1).
+
+```bash
+VITE_ORDER_SERVICE_URL=http://localhost:8081
+VITE_AUTH_SERVICE_URL=http://localhost:8082
+VITE_CATALOG_SERVICE_URL=http://localhost:8083
 ```
-
-**Cambiar URL del Backend:**
-1. Edita `src/services/api.js`
-2. Modifica la variable `API_URL`
 
 ### Endpoints Utilizados
 
-| Módulo | Método | Endpoint |
-|--------|--------|----------|
-| **Usuarios** | POST | `/users/register` |
-| | POST | `/users/login` |
-| | GET | `/users` |
-| **Productos** | GET | `/products` |
-| | POST | `/products` |
-| | GET | `/products/{id}` |
-| **Carrito** | POST | `/cart/add` |
-| | GET | `/cart/{userId}` |
-| | DELETE | `/cart/{userId}/item/{productId}` |
-| **Órdenes** | POST | `/orders` |
-| | GET | `/orders/user/{userId}` |
+| Módulo              | Método | Endpoint                          |
+| ------------------- | ------ | --------------------------------- |
+| **Auth service**    | POST   | `/auth/exchange`                  |
+|                     | GET    | `/auth/me`                        |
+| **Catalog service** | GET    | `/products`                       |
+|                     | POST   | `/products`                       |
+|                     | GET    | `/products/{id}`                  |
+| **Order service**   | POST   | `/cart/add`                       |
+|                     | GET    | `/cart/{userId}`                  |
+|                     | DELETE | `/cart/{userId}/item/{productId}` |
+|                     | DELETE | `/cart/{userId}`                  |
+|                     | POST   | `/orders`                         |
+|                     | GET    | `/orders/user/{userId}`           |
 
 ## 🎨 Temas y Estilos
 
@@ -166,16 +173,18 @@ const API_URL = 'http://localhost:8081/api';
    - GET `/cart/{userId}` retorna items y total
    - Se calcula automáticamente el subtotal por item
 
-4. **Procesar Orden (En desarrollo)**
+4. **Procesar Orden**
    - POST `/orders` crea la orden desde el carrito
-   - Backend descuenta inventario
+   - El order-service descuenta inventario
    - Se limpia el carrito automáticamente
 
 ## 🐛 Solución de Problemas
 
 ### Error: "Could not get any response"
+
 **Causa:** El backend no está corriendo.
 **Solución:**
+
 ```bash
 # En otra terminal
 cd ../demo
@@ -183,42 +192,46 @@ mvn spring-boot:run
 ```
 
 ### Error: "CORS policy: No 'Access-Control-Allow-Origin' header"
+
 **Causa:** Backend no permite requests desde frontend.
 **Solución:** Agregar CORS al backend (próxima actualización).
 
 ### Estado no se sincroniza
+
 **Causa:** Cambios en backend sin actualizar frontend.
 **Solución:** Click en el botón de actualizar o recargar página.
 
 ## 🧪 Testing Manual
 
 ### Setup Completo
+
 1. Inicia backend: `cd ../demo && mvn spring-boot:run`
 2. Inicia frontend: `npm run dev`
 3. Abre `http://localhost:3000`
 
 ### Flujo de Prueba
+
 1. **Registro:** Crea nuevo usuario con datos válidos
 2. **Login:** Inicia sesión con las credenciales
 3. **Crear Producto:** Agrega nuevos items al catálogo
 4. **Carrito:** Agrega productos y verifica total
 5. **Logout:** Cierra sesión y verifica que vuelva a login
 
-## 📝 Notas Académicas
+## 📝 Notas Técnicas
 
 Este frontend demuestra:
+
 - ✅ **Componentes React** funcionales con hooks
 - ✅ **Estado local** con useState
 - ✅ **Efectos secundarios** con useEffect
-- ✅ **Comunicación HTTP** con Axios
-- ✅ **Persistencia** con localStorage
-- ✅ **Styled Components** con CSS modular
+- ✅ **Comunicación HTTP** con Axios y clientes separados por servicio
+- ✅ **Autenticación** con Google Identity Services y `AuthProvider`
 - ✅ **Manejo de errores** y estados de carga
-- ✅ **UI/UX profesional** responsivo
+- ✅ **UI responsiva** con CSS modular
 
 ## 🚀 Próximas Mejoras
 
-- [ ] Implementar órdenes y checkout
+- [x] Implementar órdenes y checkout
 - [ ] Carrito persistente en backend
 - [ ] Autenticación con JWT
 - [ ] Búsqueda y filtrados avanzados
@@ -235,7 +248,8 @@ ISC
 
 ---
 
-**Versión:** 1.0.0  
-**Última actualización:** 27 de Febrero 2026  
+**Versión:** 1.0.0
+**Última actualización:** 27 de Febrero 2026
 **Autor del Proyecto:** Académico
+
 # Front-Cloud
