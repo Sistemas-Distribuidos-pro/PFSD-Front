@@ -48,3 +48,8 @@ export const orderService = {
 
   getAllOrders: () => orderApi.get('/orders'),
 };
+
+// ==================== NOTIFICATIONS ====================
+export const notificationService = {
+  getNotifications: () => orderApi.get('/notifications'),
+};

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { productService, cartService, orderService } from '../services/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { productService, cartService, orderService, notificationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './Shop.css';
 
@@ -14,6 +14,8 @@ const Shop = () => {
   const [checkoutMessage, setCheckoutMessage] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
@@ -22,18 +24,23 @@ const Shop = () => {
     category: '',
   });
 
-  useEffect(() => {
-    if (!user?.id) {
-      return;
+  const loadNotifications = useCallback(async () => {
+    try {
+      const response = await notificationService.getNotifications();
+      setNotifications(response.data.data || []);
+    } catch {
+      setNotifications([]);
     }
+  }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
     loadProducts();
     loadCart();
-  }, [user?.id]);
+    loadNotifications();
+  }, [user?.id, loadNotifications]);
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const loadProducts = async () => {
     try {
@@ -52,8 +59,7 @@ const Shop = () => {
     try {
       const response = await cartService.getCart(user.id);
       setCart(response.data.data || []);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setCart([]);
     }
   };
@@ -74,8 +80,7 @@ const Shop = () => {
     try {
       await cartService.removeFromCart(user.id, productId);
       loadCart();
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError('Error al eliminar del carrito');
     }
   };
@@ -88,36 +93,30 @@ const Shop = () => {
         newProduct.description,
         Number.parseFloat(newProduct.price),
         Number.parseInt(newProduct.stock, 10),
-        newProduct.category
+        newProduct.category,
       );
       loadProducts();
       setNewProduct({ name: '', description: '', price: '', stock: '', category: '' });
       setShowAddProduct(false);
       setError('');
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError('Error al crear producto');
     }
   };
 
   const handleCheckout = async () => {
-    if (!cart.items || cart.items.length === 0 || checkoutLoading) {
-      return;
-    }
-
+    if (!cart.items || cart.items.length === 0 || checkoutLoading) return;
     try {
       setCheckoutLoading(true);
       setCheckoutStatus('');
       setCheckoutMessage('');
       setError('');
-
       await orderService.createOrder();
       await loadCart();
-
       setCheckoutStatus('success');
       setCheckoutMessage('Compra realizada correctamente.');
+      setTimeout(() => loadNotifications(), 2000);
     } catch (err) {
-      console.error(err);
       setCheckoutStatus('error');
       setCheckoutMessage(err.response?.data?.message || 'No se pudo completar el checkout.');
     } finally {
@@ -125,7 +124,17 @@ const Shop = () => {
     }
   };
 
-  const cartTotal = cart.items?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const cartTotal = cart.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
   const cartCount = cart.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
@@ -138,9 +147,27 @@ const Shop = () => {
             <div className="user-info">
               <span>👤 {user.fullName || user.username}</span>
             </div>
+
+            {/* Notificaciones */}
+            <button
+              className="btn-notifications"
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setShowCart(false);
+              }}
+            >
+              🔔
+              {notifications.length > 0 && (
+                <span className="notification-badge">{notifications.length}</span>
+              )}
+            </button>
+
             <button
               className="btn-cart"
-              onClick={() => setShowCart(!showCart)}
+              onClick={() => {
+                setShowCart(!showCart);
+                setShowNotifications(false);
+              }}
             >
               🛒 Carrito ({cartCount})
             </button>
@@ -151,6 +178,32 @@ const Shop = () => {
         </div>
       </header>
 
+      {/* Panel de Notificaciones */}
+      {showNotifications && (
+        <div className="notifications-panel">
+          <h3>🔔 Mis Alertas ({notifications.length})</h3>
+          {notifications.length === 0 ? (
+            <p className="no-notifications">No tienes alertas recientes</p>
+          ) : (
+            <ul className="notifications-list">
+              {notifications.map((n, index) => (
+                <li key={index} className="notification-item">
+                  <div className="notification-header">
+                    <strong>Orden #{n.orderId}</strong>
+                    <span className="notification-date">{formatDate(n.detectedAt)}</span>
+                  </div>
+                  <ul className="notification-reasons">
+                    {n.razones.map((razon, i) => (
+                      <li key={i}>⚠️ {razon}</li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Error Message */}
       {error && <div className="error-message">{error}</div>}
 
@@ -158,7 +211,6 @@ const Shop = () => {
       <div className="shop-content">
         {!showCart ? (
           <>
-            {/* Add Product Button */}
             <div className="add-product-section">
               <button
                 className="btn-add-product"
@@ -168,7 +220,6 @@ const Shop = () => {
               </button>
             </div>
 
-            {/* Add Product Form */}
             {showAddProduct && (
               <div className="add-product-form">
                 <h3>Agregar Nuevo Producto</h3>
@@ -215,7 +266,6 @@ const Shop = () => {
               </div>
             )}
 
-            {/* Products Grid */}
             <div className="products-grid">
               <h2>Catálogo de Productos</h2>
               {loading ? (
@@ -224,7 +274,7 @@ const Shop = () => {
                 <p className="no-products">No hay productos disponibles</p>
               ) : (
                 <div className="products-list">
-                  {products.map(product => (
+                  {products.map((product) => (
                     <div key={product.id} className="product-card">
                       <div className="product-header">
                         <h3>{product.name}</h3>
@@ -233,7 +283,9 @@ const Shop = () => {
                       <p className="description">{product.description}</p>
                       <div className="product-info">
                         <span className="price">${product.price.toFixed(2)}</span>
-                        <span className={`stock ${product.stock > 0 ? 'available' : 'unavailable'}`}>
+                        <span
+                          className={`stock ${product.stock > 0 ? 'available' : 'unavailable'}`}
+                        >
                           Stock: {product.stock}
                         </span>
                       </div>
@@ -251,24 +303,23 @@ const Shop = () => {
             </div>
           </>
         ) : (
-          /* Cart View */
           <div className="cart-view">
             <h2>🛒 Mi Carrito</h2>
             {checkoutMessage && (
-              <div className={`checkout-message ${checkoutStatus}`}>
-                {checkoutMessage}
-              </div>
+              <div className={`checkout-message ${checkoutStatus}`}>{checkoutMessage}</div>
             )}
             {!cart.items || cart.items.length === 0 ? (
               <p className="empty-cart">Tu carrito está vacío</p>
             ) : (
               <>
                 <div className="cart-items">
-                  {cart.items.map(item => (
+                  {cart.items.map((item) => (
                     <div key={item.productId} className="cart-item">
                       <div className="item-info">
                         <h4>{item.productName}</h4>
-                        <p>Precio: ${item.price.toFixed(2)} × {item.quantity} unidades</p>
+                        <p>
+                          Precio: ${item.price.toFixed(2)} × {item.quantity} unidades
+                        </p>
                         <strong>Subtotal: ${item.subtotal.toFixed(2)}</strong>
                       </div>
                       <button
